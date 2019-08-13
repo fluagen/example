@@ -112,4 +112,46 @@ JDK6支持
 
 MD2/MD5/SHA/SHA256/SHA384/SHA512/HmacMD5/HmacSHA1/HmacSHA256/HmacSHA384/HmacSHA512
 
+# 4. 对称加密算法DES
+数据加密算法（Data Encryption Algorithm，DEA）是一种对称加密算法，很可能是使用最广泛的密钥系统，特别是在保护金融数据的安全中，最初开发的DEA是嵌入硬件中的。通常，自动取款机（Automated Teller Machine，ATM）都使用DEA。它出自IBM的研究工作，IBM也曾对它拥有几年的专利权，但是在1983年已到期后，处于公有范围中，允许在特定条件下可以免除专利使用费而使用。1977年被美国政府正式采纳。
+ 
+1998年后实用化DES破译机的出现彻底宣告DES算法已不具备安全性，1999年NIST颁布新标准，规定DES算法只能用于遗留加密系统，但不限制使用DESede算法。当今DES算法正是推出历史舞台，AES算法称为他的替代者。(详见： Java 加密解密之对称加密算法AES )
+ 
+## 4.1 加密原理
 
+DES 使用一个 56 位的密钥以及附加的 8 位奇偶校验位，产生最大 64 位的分组大小。这是一个迭代的分组密码，使用称为 Feistel 的技术，其中将加密的文本块分成两半。使用子密钥对其中一半应用循环功能，然后将输出与另一半进行“异或”运算；接着交换这两半，这一过程会继续下去，但最后一个循环不交换。DES 使用 16 个循环，使用异或，置换，代换，移位操作四种基本运算。
+ 
+## 4.2 JDK对DES算法的支持
+
+密钥长度：56位 (其实是64位，还需要一个8 位奇偶校验位)，换算成字节就是8个字节
+
+工作模式：ECB/CBC/PCBC/CTR/CTS/CFB/CFB8 to CFB128/OFB/OBF8 to OFB128
+
+填充方式：Nopadding/PKCS5Padding/ISO10126Padding/
+
+# 5. 对称加密算法AES
+ 
+密码学中的高级加密标准（Advanced Encryption Standard，AES），又称Rijndael加密法，是美国联邦政府采用的一种区块加密标准。这个标准用来替代原先的DES，已经被多方分析且广为全世界所使用。经过五年的甄选流程，高级加密标准由美国国家标准与技术研究院 （NIST）于2001年11月26日发布于FIPS PUB 197，并在2002年5月26日成为有效的标准。2006年，高级加密标准已然成为对称密钥加密中最流行的算法之一。该算法为比利时密码学家Joan Daemen和Vincent Rijmen所设计，结合两位作者的名字，以Rijndael之命名之，投稿高级加密标准的甄选流程。（Rijdael的发音近于 "Rhinedoll"。）
+ 
+AES是美国国家标准技术研究所NIST旨在取代DES的21世纪的加密标准。
+AES的基本要求是，采用对称分组密码体制，密钥长度的最少支持为128、192、256，分组长度128位，算法应易于各种硬件和软件实现。1998年NIST开始AES第一轮分析、测试和征集，共产生了15个候选算法。1999年3月完成了第二轮AES2的分析、测试。2000年10月2日美国政府正式宣布选中比利时密码学家Joan Daemen 和 Vincent Rijmen 提出的一种密码算法RIJNDAEL 作为 AES. 　　在应用方面，尽管DES在安全上是脆弱的，但由于快速DES芯片的大量生产，使得DES仍能暂时继续使用，为提高安全强度，通常使用独立密钥的三级DES。但是DES迟早要被AES代替。流密码体制较之分组密码在理论上成熟且安全，但未被列入下一代加密标准。 　　
+
+AES加密数据块和密钥长度可以是128比特、192比特、256比特中的任意一个。
+
+AES加密有很多轮的重复和变换。大致步骤如下：
+
+1、密钥扩展（KeyExpansion）;
+
+2、初始轮（Initial Round）;
+
+3、重复轮（Rounds），每一轮又包括：SubBytes、ShiftRows、MixColumns、AddRoundKey;
+
+4、最终轮（Final Round），最终轮没有MixColumns。
+ 
+## 5.1 JDK对AESede算法的支持
+
+密钥长度：128位、192位、256位
+
+工作模式：ECB/CBC/PCBC/CTR/CTS/CFB/CFB8 to CFB128/OFB/OBF8 to OFB128
+
+填充方式：Nopadding/PKCS5Padding/ISO10126Padding/
