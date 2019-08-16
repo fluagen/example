@@ -155,3 +155,157 @@ AES加密有很多轮的重复和变换。大致步骤如下：
 工作模式：ECB/CBC/PCBC/CTR/CTS/CFB/CFB8 to CFB128/OFB/OBF8 to OFB128
 
 填充方式：Nopadding/PKCS5Padding/ISO10126Padding/
+
+# 非对称加密RSA
+
+非对称加密，指的是加、解密使用不同的密钥，一把作为公开的公钥，另一把作为私钥。公钥加密的信息，只有私钥才能解密。反之，私钥加密的信息，只有公钥才能解密。
+
+JAVA6开始支持RSA算法，RSA算法可以用于数据加密和数字签名，相对于DES/AES等对称加密算法，他的速度要慢的多。
+
+## 优劣
+
+**优势：**
+
+安全性更高，公钥是公开的，私钥是自己保存的，不需要将私钥给别人。
+
+**劣势：**
+
+加密和解密花费时间长、速度慢，只适合对少量数据进行加密。 
+
+## 特点
+
+**1.密钥长度**
+
+目前主流密钥长度至少都是1024bit以上，低于1024bit的密钥已经不建议使用（安全问题）。
+
+主流可选值：1024、2048、3072、4096...
+
+**2. 密文的长度等于密钥长度**
+
+生成密文的长度等于密钥长度。密钥长度越大，生成密文的长度也就越大，加密的速度也就越慢，而密文也就越难被破解掉。著名的"安全和效率总是一把双刃剑"定律，在这里展现的淋漓尽致。我们必须通过定义密钥的长度在"安全"和"加解密效率"之间做出一个平衡的选择。
+
+**3. 生成密文的长度和明文长度无关，但明文长度不能超过密钥长度**
+
+不管明文长度是多少，RSA 生成的密文长度总是固定的，但是明文长度不能超过密钥长度。
+
+Java 默认的 RSA 加密实现不允许明文长度超过密钥长度减去 11 (单位是字节，也就是 byte)
+
+>也就是说，如果我们定义的密钥 (我们可以通过 java.security.KeyPairGenerator.initialize(int keysize) 来定义密钥长度)长度为 1024(单位是位，也就是 bit)，生成的密钥长度就是 1024位 / 8位/字节 = 128字节，
+>那么我们需要加密的明文长度不能超过 128字节 - 11 字节 = 117字节。
+>也就是说，我们最大能将 117 字节长度的明文进行加密，否则会出问题(抛诸如 javax.crypto.IllegalBlockSizeException: Data must not be longer than 53 bytes 的异常)。
+>BC 提供的加密算法能够支持到的 RSA 明文长度最长为密钥长度。
+
+**4. Java 默认的 RSA 实现 "RSA/None/PKCS1Padding" 要求最小密钥长度为 512 位**
+
+Java 默认的 RSA 实现 "RSA/None/PKCS1Padding" 要求最小密钥长度为 512 位(否则会报 java.security.InvalidParameterException: RSA keys must be at least 512 bits long 异常)，也就是说生成的密钥、密文长度最小为 64 个字节。
+
+可以通过调整算法提供者来减小密文长度：
+
+```java
+Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+final KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", "BC");
+keyGen.initialize(128);
+```
+
+这样得到密文长度为 128 位(16 个字节)，但是密钥小于1024bit是不安全的。
+
+**5. 每次生成的密文都不一致**
+
+一个优秀的加密必须每次生成的密文都不一致，即使每次你的明文一样、使用同一个公钥，因为这样才能把明文信息更安全地隐藏起来。
+
+Java 默认的 RSA 实现是 `RSA/None/PKCS1Padding`
+
+使用`Cipher cipher = Cipher.getInstance("RSA")`生成密文，密文总是不一致
+
+为什么 Java 默认的 RSA 实现每次生成的密文都不一致呢，即使每次使用同一个明文、同一个公钥？
+
+这是因为 RSA 的 `PKCS1Padding` 方案在加密前对明文信息进行了随机数填充。
+
+
+Bouncy Castle 的默认 RSA 实现是 `RSA/None/NoPadding`。
+
+你可以使用BC的实现让同一个明文、同一个公钥每次生成同一个密文，但是你必须意识到你这么做付出的代价是什么。
+比如，你可能使用 RSA 来加密传输，但是由于你的同一明文每次生成的同一密文，攻击者能够据此识别到同一个信息都是何时被发送。
+
+```java
+Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+final Cipher cipher = Cipher.getInstance("RSA/None/NoPadding", "BC");
+```
+
+## 注意事项
+
+**1. 加密的系统不要具备解密的功能，否则 RSA 可能不太合适**
+
+公钥加密，私钥解密。加密的系统和解密的系统分开部署，加密的系统不应该同时具备解密的功能，这样即使黑客攻破了加密系统，他拿到的也只是一堆无法破解的密文数据。否则的话，你就要考虑你的场景是否有必要用 RSA 了。
+
+**2. `byte[].toString()` 返回的实际上是内存地址，不是将数组的实际内容转换为 `String`**
+
+**警惕 toString 陷阱：Java 中数组的 toString() 方法返回的并非数组内容，它返回的实际上是数组存储元素的类型以及数组在内存的位置的一个标识。**
+
+大部分人跌入这个误区而不自知，包括一些写了多年 Java 的老鸟。比如这篇博客 [《How To Convert Byte[] Array To String In Java》](https://www.mkyong.com/java/how-do-convert-byte-array-to-string-in-java/)中的代码
+
+```java
+
+public class TestByte
+{    
+	public static void main(String[] argv) {
+ 
+		    String example = "This is an example";
+		    byte[] bytes = example.getBytes();
+ 
+		    System.out.println("Text : " + example);
+		    System.out.println("Text [Byte Format] : " + bytes);
+		    System.out.println("Text [Byte Format] : " + bytes.toString());
+ 
+		    String s = new String(bytes);
+		    System.out.println("Text Decryted : " + s);
+ 
+ 
+	}
+}
+```
+
+```
+输出：
+Text : This is an example
+Text [Byte Format] : [B@187aeca
+Text [Byte Format] : [B@187aeca
+Text Decryted : This is an example
+```
+
+以及这篇博客[《RSA Encryption Example》](https://javadigest.wordpress.com/2012/08/26/rsa-encryption-example/)中的代码
+```java
+final byte[] cipherText = encrypt(originalText, publicKey);
+System.out.println("Encrypted: " +cipherText.toString());
+```
+
+```
+输出：
+[B@4c3a8ea3
+```
+
+这些输出其实都是字节数组在内存的位置的一个标识，而不是作者所认为的字节数组转换成的字符串内容。
+如果我们对密钥以 `byte[].toString() `进行持久化存储或者和其他一些字符串打 json 传输，那么密钥的解密者得到的将只是一串毫无意义的字符，当他解码的时候很可能会遇到 `"javax.crypto.BadPaddingException"` 异常。
+
+**3. 字符串用以保存文本信息，字节数组用以保存二进制数据**
+
+`java.lang.String` 保存明文，`byte数组`保存二进制密文，在 `java.lang.String` 和 `byte[]` 之间不应该具备互相转换。
+
+如果你确实必须得使用 `java.lang.String` 来持有这些二进制数据的话，最安全的方式是使用 Base64(推荐 Apache 的 commons-codec 库的 org.apache.commons.codec.binary.Base64)
+
+```java
+      // use String to hold cipher binary data
+      Base64 base64 = new Base64(); 
+      String cipherTextBase64 = base64.encodeToString(cipherText);
+      
+      // get cipher binary data back from String
+      byte[] cipherTextArray = base64.decode(cipherTextBase64);
+```
+
+**4. Cipher 是有状态的，而且是线程不安全的**
+
+`javax.crypto.Cipher` 是有状态的，不要把 Cipher 当做一个静态变量，除非你的程序是单线程的，也就是说你能够保证同一时刻只有一个线程在调用 Cipher。
+否则你可能会遇到 `java.lang.ArrayIndexOutOfBoundsException: too much data for RSA block` 异常。
+
+遇见这个异常，你需要先确定你给 Cipher 加密的明文(或者需要解密的密文)是否过长；排除掉明文(或者密文)过长的情况，你需要考虑是不是你的 Cipher 线程不安全了。
+
