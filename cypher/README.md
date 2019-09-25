@@ -156,13 +156,13 @@ AES加密有很多轮的重复和变换。大致步骤如下：
 
 填充方式：Nopadding/PKCS5Padding/ISO10126Padding/
 
-# 非对称加密RSA
+# 6. 非对称加密RSA
 
 非对称加密，指的是加、解密使用不同的密钥，一把作为公开的公钥，另一把作为私钥。公钥加密的信息，只有私钥才能解密。反之，私钥加密的信息，只有公钥才能解密。
 
 JAVA6开始支持RSA算法，RSA算法可以用于数据加密和数字签名，相对于DES/AES等对称加密算法，他的速度要慢的多。
 
-## 优劣
+## 6.1 优劣
 
 **优势：**
 
@@ -172,7 +172,7 @@ JAVA6开始支持RSA算法，RSA算法可以用于数据加密和数字签名，
 
 加密和解密花费时间长、速度慢，只适合对少量数据进行加密。 
 
-## 特点
+## 6.2 特点
 
 **1.密钥长度**
 
@@ -232,7 +232,81 @@ Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 final Cipher cipher = Cipher.getInstance("RSA/None/NoPadding", "BC");
 ```
 
-## 注意事项
+## 6.3 如何生成rsa私钥和公钥
+
+自己生成公钥秘钥一般情况下就需要使用openssl工具了,使用工具执行命令:
+
+```
+genrsa -out rsa_private_key.pem 2048
+```
+2048指的是位数,一般情况下1024也够用了,如果要求高点还是2048位更加合适点。
+
+生成的pem文件里面以-----BEGIN RSA PRIVATE KEY-----开头-----END RSA PRIVATE KEY-----结尾的字符串,中间的部分才是秘钥的base64字符串.这个是pkcs1格式的,也就是原本的rsa密钥。
+
+```
+rsa -in rsa_private_key.pem -pubout -out rsa_public_key.pem
+```
+上面的命令会根据刚刚的私钥生成pkcs8格式的公钥。
+
+如果需要pkcs8个格式的私钥（java就是用pkcs8格式的）需要执行：
+
+```
+pkcs8 -topk8 -inform PEM -in rsa_private_key.pem -outform PEM -nocrypt
+```
+
+会打印出来以-----BEGIN PRIVATE KEY-----开头，以-----END PRIVATE KEY-----结尾的私钥。
+
+## 6.4 pkcs1格式和pkcs8格式
+
+pkcs1的格式才是原本的rsa的密钥，而pkcs8的格式是在pkcs1的数据上增加一些信息。具体这些信息是什么我并没有去深入了解。我们只需要知道pkcs1和pkcs8之间是可以转换的，以2048位的为例：
+
+公钥 pkcs8 转换为 pkcs1 其实就是将前面的32位去除即可
+
+私钥的转换需要使用openssl
+
+pkcs8转rsa:
+
+```
+openssl rsa -in pkcs8密钥 -out rsa密钥
+```
+
+rsa转pkcs8:
+```
+openssl pkcs8 -topk8 -inform PEM -in rsa密钥 -outform PEM -nocrypt -out pkcs8密钥
+```
+
+在iOS端比较特殊，可能需要生成p12文件：
+
+```
+1. 生成模长为1024bit的私钥文件private_key.pem
+
+openssl genrsa -out private_key.pem 1024
+
+2. 生成证书请求文件rsaCertReq.csr
+
+openssl req -new -key private_key.pem -out rsaCerReq.csr
+
+注意：这一步会提示输入国家、省份、mail等信息，可以根据实际情况填写，或者全部不用填写，直接全部敲回车.
+
+3. 生成证书rsaCert.crt，并设置有效时间为1年
+
+openssl x509 -req -days 3650 -in rsaCerReq.csr -signkey private_key.pem -out rsaCert.crt
+
+4. 生成供iOS使用的公钥文件public_key.der
+
+openssl x509 -outform der -in rsaCert.crt -out public_key.der
+
+5. 生成供iOS使用的私钥文件private_key.p12
+
+openssl pkcs12 -export -out private_key.p12 -inkey private_key.pem -in rsaCert.crt
+
+注意：这一步会提示给私钥文件设置密码，直接输入想要设置密码即可，然后敲回车，然后再验证刚才设置的密码，再次输入密码，然后敲回车，完毕！
+
+在解密时，private_key.p12文件需要和这里设置的密码配合使用，因此需要牢记此密码.
+```
+
+
+# 注意事项
 
 **1. 加密的系统不要具备解密的功能，否则 RSA 可能不太合适**
 
@@ -309,3 +383,6 @@ System.out.println("Encrypted: " +cipherText.toString());
 
 遇见这个异常，你需要先确定你给 Cipher 加密的明文(或者需要解密的密文)是否过长；排除掉明文(或者密文)过长的情况，你需要考虑是不是你的 Cipher 线程不安全了。
 
+# 附录
+
+1. 在线生成秘钥公钥以及加密解密的网站 http://tool.chacuo.net/cryptrsapubkey
