@@ -1,0 +1,4 @@
+curl -w '\n' -X POST -D - \
+  -H "Content-type: application/json" \
+  -d @结案文书.json \
+  http://localhost:8080/poitl/render
