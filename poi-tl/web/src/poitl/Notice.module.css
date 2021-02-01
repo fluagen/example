@@ -1,0 +1,42 @@
+.box {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.top {
+	height: 50px;
+}
+
+.space {
+	height: 50px;
+}
+.input,
+.input:hover,
+.input:focus {
+	border: 0;
+	/*border-bottom: inset;*/
+	border-bottom: 3px solid #ebebeb;
+	box-shadow: unset;
+}
+
+.date {
+	width: 80px;
+}
+
+.footer {
+	flex: 1;
+}
+
+.left {
+	width: 200px;
+	font-weight: 700;
+	padding: 0 15px;
+	font-size: 18px;
+	background-color: #f0f2f5;
+	text-align: right;
+}
+.right {
+	padding: 0 15px;
+	background-color: #fff;
+}

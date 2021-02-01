@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { Row, Col, Input, Button, Descriptions, Drawer } from "antd";
+import { Input, Button, Divider, Drawer } from "antd";
+import { Row, Col } from "antd";
+
+import styles from "./Notice.module.css";
+
+
 const layout = {
 	labelCol: {
 		span: 8,
@@ -26,6 +31,7 @@ const Word = () => {
 		</p>
 	);
 };
+
 const Notice = () => {
 	const [visible, setVisible] = useState(false);
 	const [title, setTitle] = useState("");
@@ -41,9 +47,8 @@ const Notice = () => {
 		signature,
 		year,
 		month,
-		day
-	}
-
+		day,
+	};
 
 	const showDrawer = () => {
 		setVisible(true);
@@ -52,7 +57,6 @@ const Notice = () => {
 	const closeDrawer = () => {
 		setVisible(false);
 	};
-
 
 	const onsubmit = () => {
 		let url = "http://localhost:8080/notice/tl";
@@ -75,68 +79,106 @@ const Notice = () => {
 	};
 
 	return (
-		<div>
-			<Descriptions title="通知模板" column={1} bordered>
-				<Descriptions.Item label="标题">
+		<div className={styles.box}>
+			<Row className={styles.top}>
+				<Col className={styles.left}></Col>
+				<Col className={styles.right}></Col>
+			</Row>
+			<Row>
+				<Col className={styles.left}>标题</Col>
+				<Col className={styles.right} span={10}>
 					<Input
-					value = {title}
+						className={styles.input}
+						bordered={false}
+						value={title}
 						onChange={(e) => {
 							setTitle(e.target.value);
 						}}
 					/>
-				</Descriptions.Item>
-				<Descriptions.Item label="正文">
+				</Col>
+			</Row>
+			<Row className={styles.space}>
+				<Col className={styles.left}></Col>
+				<Col className={styles.right}></Col>
+			</Row>
+			<Row>
+				<Col className={styles.left}>正文</Col>
+				<Col className={styles.right} span={10}>
 					<TextArea
 						rows={8}
 						onChange={(e) => {
 							setText(e.target.value);
 						}}
 					/>
-				</Descriptions.Item>
-				<Descriptions.Item label="落款">
-					<Row gutter={[16, 16]}>
-						<Col span={2}>
-							<p align="left">签名：</p>
-						</Col>
-						<Col span={4}>
-							<Input
-								onChange={(e) => {
-									setSignature(e.target.value);
-								}}
-							/>
-						</Col>
-					</Row>
-					<Row>
-						<Col span={2}>年：</Col>
-						<Col span={2}>
-							<Input
-								onChange={(e) => {
-									setYear(e.target.value);
-								}}
-							/>
-						</Col>
-						<Col span={4}>月：</Col>
-						<Col span={4}>
-							<Input
-								onChange={(e) => {
-									setMonth(e.target.value);
-								}}
-							/>
-						</Col>
-						<Col span={4}>日：</Col>
-						<Col span={4}>
-							<Input
-								onChange={(e) => {
-									setDay(e.target.value);
-								}}
-							/>
-						</Col>
-					</Row>
-				</Descriptions.Item>
-			</Descriptions>
-			<Button type="primary" onClick={onsubmit}>
-				提交
-			</Button>
+				</Col>
+			</Row>
+			<Row className={styles.space}>
+				<Col className={styles.left}></Col>
+				<Col className={styles.right}></Col>
+			</Row>
+			<Row>
+				<Col className={styles.left}>落款</Col>
+				<Col className={styles.right} span={10}>
+					<div style={{ paddingBottom: "20px", width: "300px" }}>
+						签名{" "}
+						<Input
+							className={`${styles.input}`}
+							value={signature}
+							bordered={false}
+							onChange={(e) => {
+								setSignature(e.target.value);
+							}}
+						/>
+					</div>
+					<div>
+						<Input
+							className={`${styles.input} ${styles.date}`}
+							value={year}
+							bordered={false}
+							onChange={(e) => {
+								setYear(e.target.value);
+							}}
+						/>
+						年
+						<Divider type="vertical" />
+						<Input
+							className={`${styles.input} ${styles.date}`}
+							value={month}
+							bordered={false}
+							onChange={(e) => {
+								setMonth(e.target.value);
+							}}
+						/>
+						月 <Divider type="vertical" />
+						<Input
+							className={`${styles.input} ${styles.date}`}
+							value={day}
+							bordered={false}
+							onChange={(e) => {
+								setDay(e.target.value);
+							}}
+						/>
+						日
+					</div>
+				</Col>
+			</Row>
+			<Row className={styles.space}>
+				<Col className={styles.left}></Col>
+				<Col className={styles.right}></Col>
+			</Row>
+			<Row>
+				<Col className={styles.left}></Col>
+				<Col className={styles.right}>
+					<Button type="primary" onClick={onsubmit}>
+						提交
+					</Button>
+				</Col>
+			</Row>
+
+			<Row className={styles.footer}>
+				<Col className={styles.left}></Col>
+				<Col className={styles.right}></Col>
+			</Row>
 			<Drawer
 				title="下载文件"
 				placement="bottom"
