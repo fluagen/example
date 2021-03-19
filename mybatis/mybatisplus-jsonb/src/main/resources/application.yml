@@ -11,9 +11,9 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/demo
     username: postgres
-    password: postgres
+    password: 111111
     
 # Logger Config
 logging:
   level:
-    com.baomidou.mybatisplus.samples: debug
+    com.cnebula.example.mybatis: debug
