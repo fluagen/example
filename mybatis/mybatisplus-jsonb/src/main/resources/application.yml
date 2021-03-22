@@ -1,17 +1,17 @@
 # DataSource Config
-#spring:
-#  datasource:
-#    schema: classpath:db/h2/schema-h2.sql
-#    data: classpath:db/h2/data-h2.sql
-#    url: jdbc:h2:mem:test
-#    username: root
-#    password: test
-
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/demo
-    username: postgres
-    password: 111111
+    schema: classpath:db/h2/schema-h2.sql
+    data: classpath:db/h2/data-h2.sql
+    url: jdbc:h2:mem:test
+    username: root
+    password: test
+
+#spring:
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/demo
+#    username: postgres
+#    password: 111111
     
 # Logger Config
 logging:
